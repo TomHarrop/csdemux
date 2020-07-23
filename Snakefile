@@ -39,12 +39,16 @@ checkpoint demultiplex:
         r1 = 'data/muxed/Undetermined_S0_L002_R1_001.fastq.gz',
         r2 = 'data/muxed/Undetermined_S0_L002_R2_001.fastq.gz'
     output:
-        directory('output/000_tmp/reads')
+        directory('output/000_tmp/reads'),
+        stats = 'output/010_demux/stats.txt'
     log:
         'output/logs/demultiplex.log'
     params:
         out = 'output/000_tmp/reads/%_r1.fastq.gz',
         out2 = 'output/000_tmp/reads/%_r2.fastq.gz'
+        streams = workflow.cores // 2
+    threads:
+        workflow.cores
     singularity:
         bbmap
     shell:
@@ -53,6 +57,8 @@ checkpoint demultiplex:
         'in2={input.r2} '
         'out={params.out} '
         'out2={params.out2} '
+        'stats={output.stats} '
+        'streams={params.streams} '
         'delimiter=: '
         'column=10 '
         'prefixmode=f '
