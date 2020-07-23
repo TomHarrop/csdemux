@@ -45,7 +45,7 @@ checkpoint demultiplex:
         'output/logs/demultiplex.log'
     params:
         out = 'output/000_tmp/reads/%_r1.fastq.gz',
-        out2 = 'output/000_tmp/reads/%_r2.fastq.gz'
+        out2 = 'output/000_tmp/reads/%_r2.fastq.gz',
         streams = workflow.cores // 2
     threads:
         workflow.cores
