@@ -69,7 +69,7 @@ barcodes_to_search <- demux_stats[!barcode %in% all_exp_bc, unique(barcode)]
 foundbclist <- future_lapply(X = barcodes_to_search,
                              FUN = GetBcByDist,
                              exp_bc = all_exp_bc,
-                             future.packages = "data.table")
+                             future.packages = c("data.table", "bit64"))
 foundbc <- rbindlist(foundbclist)
 saveRDS(foundbc, snakemake@output[["foundbc"]])
 
