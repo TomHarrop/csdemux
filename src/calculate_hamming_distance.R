@@ -45,12 +45,15 @@ GetBcByDist <- function(bc, exp_bc) {
 # stats_file <- "output/010_demux/stats.txt"
 # barcodes_file <- "data/combined_sampleinfo.csv"
 # threads <- 8
+# rds <- "foundbc.Rds"
 
 threads <- snakemake@threads[[1]]
 barcodes_file <- snakemake@input[["barcodes"]]
 stats_file <- snakemake@input[["stats"]]
+rds <- snakemake@output[["foundbc"]]
 
-plan(multiprocess(workers = threads))    
+plan(strategy = "multiprocess",
+     workers = threads)    
 options(future.globals.maxSize = +Inf)
 
 # found barcodes
@@ -71,7 +74,7 @@ foundbclist <- future_lapply(X = barcodes_to_search,
                              exp_bc = all_exp_bc,
                              future.packages = c("data.table", "bit64"))
 foundbc <- rbindlist(foundbclist)
-saveRDS(foundbc, snakemake@output[["foundbc"]])
+saveRDS(foundbc, rds)
 
 # log
 sessionInfo()
