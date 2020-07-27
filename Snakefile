@@ -14,6 +14,7 @@ from pathlib import Path
 
 
 bbmap = 'shub://TomHarrop/seq-utils:bbmap_38.76'
+bioconductor = 'shub://TomHarrop/r-containers:bioconductor_3.11'
 
 
 def demux_target(wildcards):
@@ -32,7 +33,23 @@ def demux_target(wildcards):
 
 rule target:
     input:
-        unpack(demux_target)
+        # unpack(demux_target),
+        'output/010_demux/hamming_distances.Rds'
+
+rule calculate_hamming_distance:
+    input:
+        stats = 'output/010_demux/stats.txt',
+        barcodes = 'data/combined_sampleinfo.csv'
+    output:
+        foundbc = 'output/010_demux/hamming_distances.Rds'
+    log:
+        'output/logs/calculate_hamming_distance.log'
+    threads:
+        workflow.cores
+    singularity:
+        bioconductor
+    script:
+        'src/calculate_hamming_distance.R'
 
 checkpoint demultiplex:
     input:
