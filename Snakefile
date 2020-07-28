@@ -94,7 +94,7 @@ checkpoint demultiplex:
         out2 = 'output/000_tmp/reads/%_r2.fastq.gz',
         streams = workflow.cores // 2
     threads:
-        workflow.cores
+        min(workflow.cores, 40)
     singularity:
         bbmap
     shell:
