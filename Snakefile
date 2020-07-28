@@ -34,7 +34,24 @@ def demux_target(wildcards):
 rule target:
     input:
         # unpack(demux_target),
-        'output/010_demux/hamming_distances.Rds'
+        'output/010_demux/barcode_content.pdf',
+        'output/010_demux/barcode_distance.pdf'
+
+
+rule plot_barcode_distance:
+    input:
+        stats = 'output/010_demux/stats.txt',
+        barcodes = 'data/combined_sampleinfo.csv',
+        foundbc = 'output/010_demux/hamming_distances.Rds'        
+    output:
+        plot = 'output/010_demux/barcode_distance.pdf',
+        report = 'output/010_demux/barcode_distance.csv'
+    log:
+        'output/logs/plot_barcode_distance.log'
+    singularity:
+        bioconductor
+    script:
+        'src/plot_barcode_distance.R'
 
 rule calculate_hamming_distance:
     input:
@@ -50,6 +67,18 @@ rule calculate_hamming_distance:
         bioconductor
     script:
         'src/calculate_hamming_distance.R'
+
+rule plot_barcode_content:
+    input:
+        stats = 'output/010_demux/stats.txt',
+    output:
+        plot = 'output/010_demux/barcode_content.pdf',
+    log:
+        'output/logs/plot_barcode_content.log'
+    singularity:
+        bioconductor
+    script:
+        'src/plot_barcode_content.R'
 
 checkpoint demultiplex:
     input:

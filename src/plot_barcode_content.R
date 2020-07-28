@@ -1,23 +1,23 @@
 #!/usr/bin/env Rscript
 
+log <- file(snakemake@log[[1]],
+            open = "wt")
+sink(log, type = "message")
+sink(log, type = "output", append = TRUE)
+
 library(data.table)
 library(bit64)
 library(scales)
 library(ggplot2)
 
-stats_file <- "output/010_demux/stats.txt"
+# stats_file <- "output/010_demux/stats.txt"
+stats_file <- snakemake@input[["stats"]]
 
 demux_stats <- fread(stats_file, 
                      skip = 4)
 
 setorder(demux_stats, -Bases)
 demux_stats[, bco := factor(`#Name`, levels = unique(`#Name`))]
-
-# barcode stats
-# pull out expected names and colour by that
-ggplot(demux_stats[1:200], aes(x = bco, y = Reads)) +
-    coord_flip() +
-    geom_col()
 
 # cumulative fraction of barcodes
 demux_stats[, cf := cumsum(Reads) / sum(Reads)]
@@ -32,7 +32,8 @@ mylab <- paste(first_inflexion, "libraries detected")
 
 # draw plot
 mycols <- viridis::viridis(3)
-ggplot(demux_stats[1:1000], aes(x = as.integer(bco), y = cf, group = 1)) +
+gp <- ggplot(demux_stats[1:1000], aes(x = as.integer(bco), y = cf, group = 1)) +
+    theme_minimal(base_size = 14) + 
     scale_x_continuous(trans = log_trans(base = 4),
                        breaks = trans_breaks(function(x) log(x, 4),
                                              function(x) 4^x)) +
@@ -46,7 +47,14 @@ ggplot(demux_stats[1:1000], aes(x = as.integer(bco), y = cf, group = 1)) +
                   label = mylab),
               colour = mycols[[2]],
               hjust = 1,
-              nudge_x = -0.1) +
+              nudge_x = -0.01) +
     geom_path(colour = mycols[[1]])
 
+ggsave(snakemake@output[["plot"]],
+       gp,
+       width = 210,
+       height = 148,
+       units = "mm",
+       device = cairo_pdf)
 
+sessionInfo()
