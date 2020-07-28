@@ -49,7 +49,7 @@ setorder(demux_stats, -Reads)
 total_reads <- demux_stats[, sum(Reads)]
 
 # only look at reads that were abundant enough to care about
-abundant_reads <- demux_stats[Reads / total_reads > 1e-5]
+abundant_reads <- demux_stats[Reads / total_reads > 1e-4]
 
 # expected barcodes
 expected_barcodes <- fread(barcodes_file)[, .(sample,
