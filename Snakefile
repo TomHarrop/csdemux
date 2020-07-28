@@ -41,7 +41,7 @@ rule target:
 rule plot_barcode_distance:
     input:
         stats = 'output/010_demux/stats.txt',
-        barcodes = 'data/combined_sampleinfo.csv',
+        barcodes = 'data/samples.csv',
         foundbc = 'output/010_demux/hamming_distances.Rds'        
     output:
         plot = 'output/010_demux/barcode_distance.pdf',
@@ -56,7 +56,7 @@ rule plot_barcode_distance:
 rule calculate_hamming_distance:
     input:
         stats = 'output/010_demux/stats.txt',
-        barcodes = 'data/combined_sampleinfo.csv'
+        barcodes = 'data/samples.csv'
     output:
         foundbc = 'output/010_demux/hamming_distances.Rds'
     log:
@@ -82,8 +82,8 @@ rule plot_barcode_content:
 
 checkpoint demultiplex:
     input:
-        r1 = 'data/muxed/Undetermined_S0_L002_R1_001.fastq.gz',
-        r2 = 'data/muxed/Undetermined_S0_L002_R2_001.fastq.gz'
+        r1 = 'data/muxed2/Undetermined_S0_L006_R1_001.fastq.gz',
+        r2 = 'data/muxed2/Undetermined_S0_L006_R2_001.fastq.gz'
     output:
         directory('output/000_tmp/reads'),
         stats = 'output/010_demux/stats.txt'
