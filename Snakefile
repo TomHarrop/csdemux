@@ -92,7 +92,7 @@ checkpoint demultiplex:
     params:
         out = 'output/000_tmp/reads/%_r1.fastq.gz',
         out2 = 'output/000_tmp/reads/%_r2.fastq.gz',
-        streams = workflow.cores // 2
+        streams = min(workflow.cores, 40) // 2
     threads:
         min(workflow.cores, 40)
     singularity:
