@@ -34,7 +34,7 @@ GetMmDt <- function(i){
 
 # barcode_hamming_file <- "output/010_demux/hamming_distances.Rds"
 # stats_file <- "output/010_demux/stats.txt"
-# barcodes_file <- "data/combined_sampleinfo.csv"
+# barcodes_file <- "data/samples.csv"
 
 barcode_hamming_file <- snakemake@input[["foundbc"]] 
 barcodes_file <- snakemake@input[["barcodes"]]
@@ -73,7 +73,7 @@ dist_errs <- rbindlist(lapply(1:2, GetMmDt))
 
 # mung for plotting
 countdt <- rbind(no_errors, dist_errs)
-plotdt <- countdt[, .(sample_reads = sum(Reads)), by = .(sample, dist)]
+plotdt <- countdt[, .(sample_reads = sum(Reads, na.rm = TRUE)), by = .(sample, dist)]
 plotdt[, readfrac := sample_reads / total_reads]
 setorder(plotdt, -sample_reads)
 sample_order <- plotdt[dist == 0, unique(sample)]
