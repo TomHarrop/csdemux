@@ -24,10 +24,10 @@ demux_stats[, cf := cumsum(Reads) / sum(Reads)]
 demux_stats[, cs := cumsum(Reads)]
 
 # find the inflexion point
-demux_stats[, first_diff := c(NA, diff(Reads))]
+demux_stats[, first_diff := c(NA, diff(cf))]
 demux_stats[, second_diff := c(NA, diff(first_diff))]
-first_inflexion <- demux_stats[which.max(second_diff),
-            as.integer(bco)]
+first_inflexion <- demux_stats[which.min(second_diff),
+                               as.integer(bco) - 1]
 mylab <- paste(first_inflexion, "libraries detected")
 
 # draw plot
