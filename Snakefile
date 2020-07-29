@@ -78,7 +78,7 @@ rule mv_reads:
     input:
         unpack(get_indiv_reads)
     output:
-        r1 = 'output/020_reads/{indiv}_r1.fastq.gz'
+        r1 = 'output/020_reads/{indiv}_r1.fastq.gz',
         r2 = 'output/020_reads/{indiv}_r2.fastq.gz'
     params:
         max_dist = 1
