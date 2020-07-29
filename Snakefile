@@ -32,6 +32,26 @@ def demux_target(wildcards):
     return(output_dict)
 
 
+def get_indiv_reads(wildcards):
+    '''
+    get a list of reads to concat
+    '''
+    # barcode_csv = 'output/010_demux/barcode_distance.csv'
+    # my_indiv = 'indiv83_mhyp_lincoln'
+    # my_dist = 1
+    read_path = 'output/000_tmp/reads/{bc}_r{r}.fastq.gz'
+    my_dist = int(max_dist)
+    my_indiv = wildcards.indiv
+    barcode_csv = checkpoints.plot_barcode_distance.get(
+        **wildcards).output['report']
+    found_bc = pandas.read_csv(barcode_csv)
+    my_bcs = sorted(set(
+        found_bc.loc[(found_bc['sample'] == my_indiv) & (found_bc.dist <= my_dist)]['found_barcode']))
+    return(
+        {'r1': expand(read_path, bc=my_bcs, r=['1']),
+         'r2': expand(read_path, bc=my_bcs, r=['2'])})
+
+
 def kept_indiv_reads(wildcards):
     '''
     Parse the barcode_csv to find which indivs we want to keep
@@ -45,6 +65,15 @@ def kept_indiv_reads(wildcards):
     kept_indivs = sorted(set(kept_df['sample']))
     return(expand(read_path, indiv=kept_indivs, r=['1', '2']))
 
+###########
+# GLOBALS #
+###########
+
+max_dist = 1
+
+#########
+# RULES # 
+#########
 
 rule target:
     input:
@@ -53,35 +82,12 @@ rule target:
         'output/010_demux/barcode_content.pdf',
         'output/010_demux/barcode_distance.pdf'
 
-
-def get_indiv_reads(wildcards, params):
-    '''
-    get a list of reads to concat
-    '''
-    # barcode_csv = 'output/010_demux/barcode_distance.csv'
-    # my_indiv = 'indiv83_mhyp_lincoln'
-    # my_dist = 1
-    read_path = 'output/000_tmp/reads/{bc}_r{r}.fastq.gz'
-    my_dist = int(params.max_dist)
-    my_indiv = wildcards.indiv
-    barcode_csv = checkpoints.plot_barcode_distance.get(
-        **wildcards).output['report']
-    found_bc = pandas.read_csv(barcode_csv)
-    my_bcs = sorted(set(
-        found_bc.loc[(found_bc['sample'] == my_indiv) & (found_bc.dist <= my_dist)]['found_barcode']))
-    return(
-        {'r1': expand(read_path, bc=my_bcs, r=['1']),
-         'r2': expand(read_path, bc=my_bcs, r=['2'])})
-
-
 rule mv_reads:
     input:
         unpack(get_indiv_reads)
     output:
         r1 = 'output/020_reads/{indiv}_r1.fastq.gz',
         r2 = 'output/020_reads/{indiv}_r2.fastq.gz'
-    params:
-        max_dist = 1
     shell:
         'cat {input.r1} > {output.r1} & '
         'cat {input.r2} > {output.r2} & '
