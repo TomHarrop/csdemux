@@ -3,20 +3,10 @@
 from pathlib import Path
 import pandas
 
-# demuxbyname.sh \
-# in=r1.fastq \
-# in2=r2.fastq \
-# delimiter=: \
-# column=10 \
-# prefixmode=f \
-# zl=9 \
-# out=%_r1.fastq.gz \
-# out2=%_r2.fastq.gz
 
-
-bbmap = 'shub://TomHarrop/seq-utils:bbmap_38.76'
-bioconductor = 'shub://TomHarrop/r-containers:bioconductor_3.11'
-
+#############
+# FUNCTIONS #
+#############
 
 def demux_target(wildcards):
     '''
@@ -65,11 +55,17 @@ def kept_indiv_reads(wildcards):
     kept_indivs = sorted(set(kept_df['sample']))
     return(expand(read_path, indiv=kept_indivs, r=['1', '2']))
 
+
 ###########
 # GLOBALS #
 ###########
 
 max_dist = 0
+
+# containers
+bbmap = 'shub://TomHarrop/seq-utils:bbmap_38.76'
+bioconductor = 'shub://TomHarrop/r-containers:bioconductor_3.11'
+
 
 #########
 # RULES # 
@@ -77,7 +73,6 @@ max_dist = 0
 
 rule target:
     input:
-        # unpack(demux_target),
         kept_indiv_reads,
         'output/010_demux/barcode_content.pdf',
         'output/010_demux/barcode_distance.pdf'
