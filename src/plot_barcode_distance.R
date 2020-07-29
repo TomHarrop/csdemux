@@ -35,10 +35,16 @@ GetMmDt <- function(i){
 # barcode_hamming_file <- "output/010_demux/hamming_distances.Rds"
 # stats_file <- "output/010_demux/stats.txt"
 # barcodes_file <- "data/samples.csv"
+# read_min_freq <- 1e-4
+# max_mismatches <- 1
 
 barcode_hamming_file <- snakemake@input[["foundbc"]] 
 barcodes_file <- snakemake@input[["barcodes"]]
 stats_file <- snakemake@input[["stats"]]
+
+# params
+read_min_freq <- as.numeric(snakemake@params[["read_min_freq"]])
+max_mismatches <- as.integer(snakemake@params[["max_mismatches"]])
 
 # found barcodes
 demux_stats <- fread(stats_file, 
@@ -49,7 +55,7 @@ setorder(demux_stats, -Reads)
 total_reads <- demux_stats[, sum(Reads)]
 
 # only look at reads that were abundant enough to care about
-abundant_reads <- demux_stats[Reads / total_reads > 1e-4]
+abundant_reads <- demux_stats[Reads / total_reads > read_min_freq]
 
 # expected barcodes
 expected_barcodes <- fread(barcodes_file)[, .(sample,
@@ -69,7 +75,7 @@ no_errors[, dist := 0]
 no_errors[, found_barcode := expected_barcode]
 
 # reads that could be matched with dist < i
-dist_errs <- rbindlist(lapply(1:2, GetMmDt))
+dist_errs <- rbindlist(lapply(1:max_mismatches, GetMmDt))
 
 # mung for plotting
 countdt <- rbind(no_errors, dist_errs)

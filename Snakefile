@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from pathlib import Path
+import pandas
 
 # demuxbyname.sh \
 # in=r1.fastq \
@@ -31,21 +32,45 @@ def demux_target(wildcards):
     return(output_dict)
 
 
+def kept_indiv_reads(wildcards):
+    '''
+    Parse the barcode_csv to find which indivs we want to keep
+    '''
+    # barcode_csv = 'output/010_demux/barcode_distance.csv'
+    barcode_csv = checkpoints.plot_barcode_distance.get(
+        **wildcards).output['report']
+    read_path = 'output/020_reads/{indiv}.fastq.gz'
+    found_bc = pandas.read_csv(barcode_csv)
+    kept_df = found_bc.loc[(found_bc.dist == 0) & (found_bc.Reads > 0)]
+    kept_indivs = sorted(set(kept_df['sample']))
+    return(expand(read_path, indiv=kept_indivs))
+
+
 rule target:
     input:
         # unpack(demux_target),
+        kept_indiv_reads,
         'output/010_demux/barcode_content.pdf',
         'output/010_demux/barcode_distance.pdf'
 
+# for indiv in kept_indivs:
+#     indiv_to_bc[indiv] = sorted(set(
+#         kept_df.loc[kept_df['sample'] == indiv]['expected_barcode']))
 
-rule plot_barcode_distance:
+
+
+
+checkpoint plot_barcode_distance:
     input:
         stats = 'output/010_demux/stats.txt',
         barcodes = 'data/samples.csv',
-        foundbc = 'output/010_demux/hamming_distances.Rds'        
+        foundbc = 'output/010_demux/hamming_distances.Rds'
     output:
         plot = 'output/010_demux/barcode_distance.pdf',
         report = 'output/010_demux/barcode_distance.csv'
+    params:
+        read_min_freq = 1e-4,
+        max_mismatches = 2
     log:
         'output/logs/plot_barcode_distance.log'
     singularity:
