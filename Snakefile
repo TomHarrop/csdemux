@@ -124,7 +124,7 @@ checkpoint demultiplex:
         r1 = 'data/muxed2/Undetermined_S0_L006_R1_001.fastq.gz',
         r2 = 'data/muxed2/Undetermined_S0_L006_R2_001.fastq.gz'
     output:
-        temp(directory('output/000_tmp/reads')),
+        directory('output/000_tmp/reads'),
         stats = 'output/010_demux/stats.txt'
     log:
         'output/logs/demultiplex.log'
