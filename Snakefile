@@ -69,7 +69,7 @@ def kept_indiv_reads(wildcards):
 # GLOBALS #
 ###########
 
-max_dist = 1
+max_dist = 0
 
 #########
 # RULES # 
