@@ -63,17 +63,6 @@ rule target:
         'output/010_demux/barcode_content.pdf',
         'output/010_demux/barcode_distance.pdf'
 
-# rule mv_reads:
-#     input:
-#         unpack(get_indiv_reads)
-#     output:
-#         r1 = 'output/020_reads/{indiv}_r1.fastq.gz',
-#         r2 = 'output/020_reads/{indiv}_r2.fastq.gz'
-#     shell:
-#         'cat {input.r1} > {output.r1} & '
-#         'cat {input.r2} > {output.r2} & '
-#         'wait'
-
 rule trim:
     input:
         'output/000_tmp/filter/{indiv}_filter.fastq'
@@ -100,7 +89,8 @@ rule trim:
 
 rule filter:
     input:
-        unpack(get_indiv_reads)
+        r1 = 'output/020_reads/{indiv}_r1.fastq.gz',
+        r2 = 'output/020_reads/{indiv}_r2.fastq.gz'
     output:
         pipe = pipe('output/000_tmp/filter/{indiv}_filter.fastq'),
         stats = 'output/030_filter/{indiv}_filter.txt'
@@ -119,6 +109,18 @@ rule filter:
         'stats={output.stats} '
         '>>{output.pipe} '
         '2> {log}'
+
+
+rule mv_reads:
+    input:
+        unpack(get_indiv_reads)
+    output:
+        r1 = 'output/020_reads/{indiv}_r1.fastq.gz',
+        r2 = 'output/020_reads/{indiv}_r2.fastq.gz'
+    shell:
+        'cat {input.r1} > {output.r1} & '
+        'cat {input.r2} > {output.r2} & '
+        'wait'
 
 
 checkpoint plot_barcode_distance:
