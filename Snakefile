@@ -158,10 +158,13 @@ rule trim:
         'output/logs/{indiv}.trim.log'
     params:
         trim = '/adapters.fa'
+    threads:
+        max(4, workflow.cores // len(all_indivs))
     singularity:
         bbmap
     shell:
         'bbduk.sh '
+        'threads={threads} '
         'in={input} '
         'int=t '
         'out={output.r1} '
@@ -184,11 +187,14 @@ rule filter:
     params:
         filter = '/phix174_ill.ref.fa.gz'
     log:
-        'output/{indiv}.filter.log'
+        'output/logs/{indiv}.filter.log'
+    threads:
+        max(4, workflow.cores // len(all_indivs))
     singularity:
         bbmap
     shell:
         'bbduk.sh '
+        'threads={threads} '
         'in={input.r1} '
         'in2={input.r2} '
         'int=f '
