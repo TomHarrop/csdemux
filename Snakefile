@@ -155,7 +155,7 @@ rule trim:
         stats = 'output/030_filter/stats/{indiv}.trim.stats.txt',
         log = 'output/030_filter/stats/{indiv}.trim.log.txt'
     log:
-        'output/logs/{indiv}_trim.log'
+        'output/logs/{indiv}.trim.log'
     params:
         trim = '/adapters.fa'
     singularity:
@@ -171,7 +171,7 @@ rule trim:
         'ktrim=r k=23 mink=11 hdist=1 tpe tbo '
         'forcetrimmod=5 '
         'stats={output.stats} '
-        '2> {output.log}'
+        '2> >( tee -a {output.log} &> {log} )'
 
 rule filter:
     input:
@@ -183,6 +183,8 @@ rule filter:
         log = 'output/030_filter/stats/{indiv}.filter.log.txt'
     params:
         filter = '/phix174_ill.ref.fa.gz'
+    log:
+        'output/{indiv}.filter.log'
     singularity:
         bbmap
     shell:
@@ -195,7 +197,7 @@ rule filter:
         'hdist=1 '
         'stats={output.stats} '
         '>>{output.pipe} '
-        '2> {output.log}'
+        '2> >( tee -a {output.log} &> {log} )'
 
 
 rule mv_reads:
