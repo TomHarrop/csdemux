@@ -42,11 +42,33 @@ def kept_indiv_reads(wildcards):
     return(expand(read_path, indiv=kept_indivs, r=['1', '2']))
 
 
+
+def filter_trim_stats(wildcards):
+    '''
+    Parse the barcode_csv to find which indivs we want to keep
+    '''
+    # barcode_csv = 'output/010_demux/barcode_distance.csv'
+    barcode_csv = checkpoints.plot_barcode_distance.get(
+        **wildcards).output['report']
+    stat_path = 'output/030_filter/stats/{indiv}.{step}.txt'
+    found_bc = pandas.read_csv(barcode_csv)
+    kept_df = found_bc.loc[(found_bc.dist == 0) & (found_bc.Reads > 0)]
+    kept_indivs = sorted(set(kept_df['sample']))
+    return(expand(stat_path, indiv=kept_indivs, step=wildcards.step))
+
+
 ###########
 # GLOBALS #
 ###########
 
 max_dist = 0
+
+# get all indivs
+barcode_file = 'data/samples.csv'
+barcode_csv = pandas.read_csv(barcode_file)
+all_indivs = sorted(set(barcode_csv['sample']))
+'|'.join(all_indivs)
+
 
 # containers
 bbmap = 'shub://TomHarrop/seq-utils:bbmap_38.76'
@@ -57,14 +79,25 @@ bioconductor = 'shub://TomHarrop/r-containers:bioconductor_3.11'
 # RULES # 
 #########
 
+wildcard_constraints:
+    indiv='|'.join(all_indivs),
+    step='filter|trim'
+
 rule target:
     input:
         kept_indiv_reads,
         'output/010_demux/barcode_content.pdf',
         'output/010_demux/barcode_distance.pdf'
 
+# 'output/030_filter/stats/trim.all.txt'
 
-# output/030_filter/stats/indiv12_mhyp_lincoln.trim.txt
+rule combine_step_logs:
+    input:
+        filter_trim_stats
+    output:
+        'output/030_filter/stats/{step}.all.txt'
+    shell:
+        'cat {input} > {output}'
 
 rule grep_logs:
     input:
