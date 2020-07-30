@@ -35,7 +35,7 @@ def kept_indiv_reads(wildcards):
     # barcode_csv = 'output/010_demux/barcode_distance.csv'
     barcode_csv = checkpoints.plot_barcode_distance.get(
         **wildcards).output['report']
-    read_path = 'output/020_reads/{indiv}_r{r}.fastq.gz'
+    read_path = 'output/030_filter/{indiv}_r{r}.fastq.gz'
     found_bc = pandas.read_csv(barcode_csv)
     kept_df = found_bc.loc[(found_bc.dist == 0) & (found_bc.Reads > 0)]
     kept_indivs = sorted(set(kept_df['sample']))
@@ -63,16 +63,63 @@ rule target:
         'output/010_demux/barcode_content.pdf',
         'output/010_demux/barcode_distance.pdf'
 
-rule mv_reads:
+# rule mv_reads:
+#     input:
+#         unpack(get_indiv_reads)
+#     output:
+#         r1 = 'output/020_reads/{indiv}_r1.fastq.gz',
+#         r2 = 'output/020_reads/{indiv}_r2.fastq.gz'
+#     shell:
+#         'cat {input.r1} > {output.r1} & '
+#         'cat {input.r2} > {output.r2} & '
+#         'wait'
+
+rule trim:
+    input:
+        'output/000_tmp/filter/{indiv}_filter.fastq'
+    output:
+        r1 = 'output/030_filter/{indiv}_r1.fastq.gz',
+        r2 = 'output/030_filter/{indiv}_r2.fastq.gz',
+        stats = 'output/030_filter/{indiv}_trim.txt'
+    log:
+        'output/logs/{indiv}_trim.log'
+    params:
+        trim = '/adapters.fa'
+    shell:
+        'bbduk.sh '
+        'in={input} '
+        'int=t '
+        'out={output.r1} '
+        'out2={output.r2} '
+        'zl=9 '
+        'ref={params.trim} '
+        'ktrim=r k=23 mink=11 hdist=1 tpe tbo '
+        'forcetrimmod=5 '
+        'stats={output.stats} '
+        '2> {log}'
+
+rule filter:
     input:
         unpack(get_indiv_reads)
     output:
-        r1 = 'output/020_reads/{indiv}_r1.fastq.gz',
-        r2 = 'output/020_reads/{indiv}_r2.fastq.gz'
+        pipe = pipe('output/000_tmp/filter/{indiv}_filter.fastq'),
+        stats = 'output/030_filter/{indiv}_filter.txt'
+    log:
+        'output/logs/{indiv}_filter.log'
+    params:
+        filter = '/phix174_ill.ref.fa.gz'
     shell:
-        'cat {input.r1} > {output.r1} & '
-        'cat {input.r2} > {output.r2} & '
-        'wait'
+        'bbduk.sh '
+        'in={input.r1} '
+        'in2={input.r2} '
+        'int=f '
+        'out=stdout.fastq '
+        'ref={params.filter} '
+        'hdist=1 '
+        'stats={output.stats} '
+        '>>{output.pipe} '
+        '2> {log}'
+
 
 checkpoint plot_barcode_distance:
     input:
