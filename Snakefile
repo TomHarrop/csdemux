@@ -64,11 +64,11 @@ rule target:
         'output/010_demux/barcode_distance.pdf'
 
 
-# 030_filter/stats/indiv12_mhyp_lincoln.trim.txt
+# output/030_filter/stats/indiv12_mhyp_lincoln.trim.txt
 
 rule grep_logs:
     input:
-        'output/030_filter/stats/{indiv}_{step}_log.txt'
+        'output/030_filter/stats/{indiv}.{step}.log.txt'
     output:
         '030_filter/stats/{indiv}.{step}.txt'
     shell:
@@ -89,8 +89,8 @@ rule trim:
     output:
         r1 = 'output/030_filter/{indiv}_r1.fastq.gz',
         r2 = 'output/030_filter/{indiv}_r2.fastq.gz',
-        stats = 'output/030_filter/stats/{indiv}_trim.txt',
-        log = 'output/030_filter/stats/{indiv}_trim_log.txt'
+        stats = 'output/030_filter/stats/{indiv}.trim.txt',
+        log = 'output/030_filter/stats/{indiv}.trim.log.txt'
     log:
         'output/logs/{indiv}_trim.log'
     params:
@@ -116,8 +116,8 @@ rule filter:
         r2 = 'output/020_reads/{indiv}_r2.fastq.gz'
     output:
         pipe = pipe('output/000_tmp/filter/{indiv}_filter.fastq'),
-        stats = 'output/030_filter/stats/{indiv}_filter.txt'
-        log = 'output/030_filter/stats/{indiv}_filter_log.txt'
+        stats = 'output/030_filter/stats/{indiv}.filter.txt',
+        log = 'output/030_filter/stats/{indiv}.filter.log.txt'
     params:
         filter = '/phix174_ill.ref.fa.gz'
     singularity:
