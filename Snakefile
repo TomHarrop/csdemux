@@ -70,7 +70,7 @@ rule grep_logs:
     input:
         'output/030_filter/stats/{indiv}.{step}.log.txt'
     output:
-        '030_filter/stats/{indiv}.{step}.txt'
+        'output/030_filter/stats/{indiv}.{step}.txt'
     shell:
         'grep \"^Input:\" {input} '
         '| tr -s \' \' '
@@ -89,7 +89,7 @@ rule trim:
     output:
         r1 = 'output/030_filter/{indiv}_r1.fastq.gz',
         r2 = 'output/030_filter/{indiv}_r2.fastq.gz',
-        stats = 'output/030_filter/stats/{indiv}.trim.txt',
+        stats = 'output/030_filter/stats/{indiv}.trim.stats.txt',
         log = 'output/030_filter/stats/{indiv}.trim.log.txt'
     log:
         'output/logs/{indiv}_trim.log'
@@ -116,7 +116,7 @@ rule filter:
         r2 = 'output/020_reads/{indiv}_r2.fastq.gz'
     output:
         pipe = pipe('output/000_tmp/filter/{indiv}_filter.fastq'),
-        stats = 'output/030_filter/stats/{indiv}.filter.txt',
+        stats = 'output/030_filter/stats/{indiv}.filter.stats.txt',
         log = 'output/030_filter/stats/{indiv}.filter.log.txt'
     params:
         filter = '/phix174_ill.ref.fa.gz'
