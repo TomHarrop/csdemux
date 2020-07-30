@@ -57,6 +57,20 @@ def filter_trim_stats(wildcards):
     return(expand(stat_path, indiv=kept_indivs, step=wildcards.step))
 
 
+def trim_stat_files(wildcards):
+    '''
+    Parse the barcode_csv to find which indivs we want to keep
+    '''
+    # barcode_csv = 'output/010_demux/barcode_distance.csv'
+    barcode_csv = checkpoints.plot_barcode_distance.get(
+        **wildcards).output['report']
+    stat_path = 'output/030_filter/stats/{indiv}.trim.stats.txt'
+    found_bc = pandas.read_csv(barcode_csv)
+    kept_df = found_bc.loc[(found_bc.dist == 0) & (found_bc.Reads > 0)]
+    kept_indivs = sorted(set(kept_df['sample']))
+    return(expand(stat_path, indiv=kept_indivs))
+
+
 ###########
 # GLOBALS #
 ###########
@@ -80,16 +94,30 @@ bioconductor = 'shub://TomHarrop/r-containers:bioconductor_3.11'
 #########
 
 wildcard_constraints:
-    indiv='|'.join(all_indivs),
-    step='filter|trim'
+    indiv = '|'.join(all_indivs),
+    step = 'filter|trim'
 
 rule target:
     input:
         kept_indiv_reads,
         'output/010_demux/barcode_content.pdf',
-        'output/010_demux/barcode_distance.pdf'
+        'output/010_demux/barcode_distance.pdf',
+        'output/030_filter/stats/adaptor_content.pdf',
+        'output/030_filter/stats/filter.all.txt'
 
-# 'output/030_filter/stats/trim.all.txt'
+rule plot_adaptor_content:
+    input:
+        summary_file = 'output/030_filter/stats/trim.all.txt',
+        trim_files = trim_stat_files
+    output:
+        plot = 'output/030_filter/stats/adaptor_content.pdf'
+    log:
+        'output/logs/plot_adaptor_content.log'
+    singularity:
+        bioconductor
+    script:
+        'src/plot_adaptor_content.R'
+
 rule combine_step_logs:
     input:
         step_files = filter_trim_stats
@@ -106,7 +134,7 @@ rule grep_logs:
     input:
         'output/030_filter/stats/{indiv}.{step}.log.txt'
     output:
-        'output/030_filter/stats/{indiv}.{step}.txt'
+        temp('output/030_filter/stats/{indiv}.{step}.txt')
     shell:
         'grep \"^Input:\" {input} '
         '| tr -s \' \' '
@@ -117,7 +145,6 @@ rule grep_logs:
         '| tr -s \' \' '
         '| cut -f1,2,3 '
         '>> {output}'
-
 
 rule trim:
     input:
