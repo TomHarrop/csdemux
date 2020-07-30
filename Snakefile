@@ -96,7 +96,7 @@ rule combine_step_logs:
     output:
         step_data = 'output/030_filter/stats/{step}.all.txt'
     log:
-        'output/logs/combine_step_logs.log'
+        'output/logs/combine_step_logs.{step}.log'
     singularity:
         bioconductor
     script:
