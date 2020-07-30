@@ -74,6 +74,8 @@ rule trim:
         'output/logs/{indiv}_trim.log'
     params:
         trim = '/adapters.fa'
+    singularity:
+        bbmap
     shell:
         'bbduk.sh '
         'in={input} '
@@ -98,6 +100,8 @@ rule filter:
         'output/logs/{indiv}_filter.log'
     params:
         filter = '/phix174_ill.ref.fa.gz'
+    singularity:
+        bbmap
     shell:
         'bbduk.sh '
         'in={input.r1} '
