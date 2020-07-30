@@ -63,13 +63,34 @@ rule target:
         'output/010_demux/barcode_content.pdf',
         'output/010_demux/barcode_distance.pdf'
 
+
+# 030_filter/stats/indiv12_mhyp_lincoln.trim.txt
+
+rule grep_logs:
+    input:
+        'output/030_filter/stats/{indiv}_{step}_log.txt'
+    output:
+        '030_filter/stats/{indiv}.{step}.txt'
+    shell:
+        'grep \"^Input:\" {input} '
+        '| tr -s \' \' '
+        '| cut -f1,2,4 '
+        '> {output} '
+        '; '
+        'grep \"^Result:\" {input} '
+        '| tr -s \' \' '
+        '| cut -f1,2,3 '
+        '>> {output}'
+
+
 rule trim:
     input:
         'output/000_tmp/filter/{indiv}_filter.fastq'
     output:
         r1 = 'output/030_filter/{indiv}_r1.fastq.gz',
         r2 = 'output/030_filter/{indiv}_r2.fastq.gz',
-        stats = 'output/030_filter/{indiv}_trim.txt'
+        stats = 'output/030_filter/stats/{indiv}_trim.txt',
+        log = 'output/030_filter/stats/{indiv}_trim_log.txt'
     log:
         'output/logs/{indiv}_trim.log'
     params:
@@ -87,7 +108,7 @@ rule trim:
         'ktrim=r k=23 mink=11 hdist=1 tpe tbo '
         'forcetrimmod=5 '
         'stats={output.stats} '
-        '2> {log}'
+        '2> {output.log}'
 
 rule filter:
     input:
@@ -95,9 +116,8 @@ rule filter:
         r2 = 'output/020_reads/{indiv}_r2.fastq.gz'
     output:
         pipe = pipe('output/000_tmp/filter/{indiv}_filter.fastq'),
-        stats = 'output/030_filter/{indiv}_filter.txt'
-    log:
-        'output/logs/{indiv}_filter.log'
+        stats = 'output/030_filter/stats/{indiv}_filter.txt'
+        log = 'output/030_filter/stats/{indiv}_filter_log.txt'
     params:
         filter = '/phix174_ill.ref.fa.gz'
     singularity:
@@ -112,7 +132,7 @@ rule filter:
         'hdist=1 '
         'stats={output.stats} '
         '>>{output.pipe} '
-        '2> {log}'
+        '2> {output.log}'
 
 
 rule mv_reads:
