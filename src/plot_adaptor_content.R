@@ -9,17 +9,18 @@ library(data.table)
 library(bit64)
 library(ggplot2)
 
-summary_file <- "output/030_filter/stats/trim.all.txt"
-trim_files <- list.files("output/030_filter/stats",
-                         pattern = ".trim.stats.txt",
-                         full.names = TRUE)
+# summary_file <- "output/030_filter/stats/trim.all.txt"
+# trim_files <- list.files("output/030_filter/stats",
+#                          pattern = ".trim.stats.txt",
+#                          full.names = TRUE)
 
+summary_file <- snakemake@input[["summary_file"]]
+trim_files <- snakemake@input[["trim_files"]]
 
 summary_data <- fread(summary_file)
 
 names(trim_files) <- sapply(trim_files, function(x) 
     unlist(strsplit(basename(x), ".", fixed = TRUE))[[1]])
-
 
 trim_list <- lapply(trim_files, function(x)
     fread(x, fill = TRUE, skip = 3)[, .(adaptor = `#Name`, reads = Reads)])
@@ -64,7 +65,9 @@ adaptor_pd_long[, facet_lab := relevel(factor(facet_lab),
                                        "Fraction of reads with adaptor")]
 
 # plot with both facets
+extracols <- viridis::viridis(3, option = "A")
 gp <- ggplot(mapping = aes(x = indiv, y = value, fill = adaptor)) +
+    theme_grey(base_size = 8) +
     theme(strip.placement = "outside",
           strip.background = element_blank(),
           legend.position = "top") +
@@ -78,9 +81,17 @@ gp <- ggplot(mapping = aes(x = indiv, y = value, fill = adaptor)) +
     geom_col(data = adaptor_pd_long[variable == "adaptor_frac"]) + 
     geom_col(data = unique(adaptor_pd_long[variable == "bases_result_frac"],
                            by = "indiv"),
-             fill = "grey") +
+             fill = extracols[[1]]) +
     geom_col(data = unique(adaptor_pd_long[variable == "reads_Result"],
                            by = "indiv"),
              aes(y = value / 1e6),
-             fill = "grey")
+             fill = extracols[[2]])
 
+ggsave(snakemake@output[["plot"]],
+       gp,
+       width = 210,
+       height = 148,
+       units = "mm",
+       device = cairo_pdf)
+
+sessionInfo()
