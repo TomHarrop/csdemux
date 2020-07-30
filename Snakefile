@@ -90,14 +90,17 @@ rule target:
         'output/010_demux/barcode_distance.pdf'
 
 # 'output/030_filter/stats/trim.all.txt'
-
 rule combine_step_logs:
     input:
-        filter_trim_stats
+        step_files = filter_trim_stats
     output:
-        'output/030_filter/stats/{step}.all.txt'
-    shell:
-        'cat {input} > {output}'
+        step_data = 'output/030_filter/stats/{step}.all.txt'
+    log:
+        'output/logs/combine_step_logs.log'
+    singularity:
+        bioconductor
+    script:
+        'src/combine_step_logs.R'
 
 rule grep_logs:
     input:
