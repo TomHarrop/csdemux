@@ -14,9 +14,6 @@ def get_indiv_reads(wildcards):
     '''
     get a list of reads to concat
     '''
-    # barcode_csv = 'output/010_demux/barcode_distance.csv'
-    # my_indiv = 'indiv83_mhyp_lincoln'
-    # my_dist = 1
     read_path = Path(outdir, 'tmp/reads/{bc}_r{r}.fastq')
     my_dist = int(max_dist)
     my_indiv = wildcards.indiv
@@ -34,7 +31,6 @@ def kept_indiv_reads(wildcards):
     '''
     Parse the barcode_csv to find which indivs we want to keep
     '''
-    # barcode_csv = 'output/010_demux/barcode_distance.csv'
     barcode_csv = checkpoints.plot_barcode_distance.get(
         **wildcards).output['report']
     read_path = Path(outdir, 'reads/{indiv}_r{r}.fastq.gz')
@@ -48,7 +44,6 @@ def filter_trim_stats(wildcards):
     '''
     Parse the barcode_csv to find which indivs we want to keep
     '''
-    # barcode_csv = 'output/010_demux/barcode_distance.csv'
     barcode_csv = checkpoints.plot_barcode_distance.get(
         **wildcards).output['report']
     stat_path = Path(outdir, 'stats/{indiv}.{step}.txt')
@@ -62,7 +57,6 @@ def trim_stat_files(wildcards):
     '''
     Parse the barcode_csv to find which indivs we want to keep
     '''
-    # barcode_csv = 'output/010_demux/barcode_distance.csv'
     barcode_csv = checkpoints.plot_barcode_distance.get(
         **wildcards).output['report']
     stat_path = Path(outdir, 'stats/{indiv}.trim.stats.txt')
@@ -259,8 +253,6 @@ rule plot_barcode_content:
 
 checkpoint demultiplex:
     input:
-        # r1 = 'data/muxed/Undetermined_S0_L002_R1_001.fastq.gz',
-        # r2 = 'data/muxed/Undetermined_S0_L002_R2_001.fastq.gz'
         r1 = muxed_r1,
         r2 = muxed_r2
     output:
