@@ -99,7 +99,6 @@ def main():
         lock=False,
         printreason=True,
         printshellcmds=True,
-        use_singularity=True,       # testing
         dryrun=True if args['dry_run'] else False,
         restart_times=args['restart_times'])
 

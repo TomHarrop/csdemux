@@ -90,10 +90,6 @@ muxed_r2 = config['r2_file']
 barcode_csv = pandas.read_csv(barcode_file)
 all_indivs = sorted(set(barcode_csv['sample']))
 
-# containers
-bbmap = 'shub://TomHarrop/seq-utils:bbmap_38.76'
-bioconductor = 'shub://TomHarrop/r-containers:bioconductor_3.11'
-
 
 #########
 # RULES #
