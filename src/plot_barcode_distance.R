@@ -103,10 +103,13 @@ gp <- ggplot(plotdt2, aes(y = sample_reads/1e6, x = sample, fill = as.factor(dis
                          guide = guide_legend(title = "Barcode distance")) +
     geom_col()
 
+# 3mm per line plus 30 mm
+ho_mm <- (length(sample_order) * 3) + 33
+
 ggsave(snakemake@output[["plot"]],
        gp,
        width = 148,
-       height = 210,
+       height = ho_mm,
        units = "mm",
        device = cairo_pdf)
 

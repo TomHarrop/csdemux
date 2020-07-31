@@ -64,13 +64,19 @@ adaptor_pd_long[variable == "reads_Result",
 adaptor_pd_long[, facet_lab := relevel(factor(facet_lab),
                                        "Fraction of reads with adaptor")]
 
+# get order for indivs
+indiv_order <- trim_with_summary[order(-reads_Result), unique(indiv)]
+adaptor_pd_long[, indiv := factor(indiv, levels = indiv_order)]
+
 # plot with both facets
 extracols <- viridis::viridis(3, option = "A")
 gp <- ggplot(mapping = aes(x = indiv, y = value, fill = adaptor)) +
     theme_grey(base_size = 8) +
     theme(strip.placement = "outside",
           strip.background = element_blank(),
-          legend.position = "top") +
+          legend.position = "top",
+          legend.key.size = unit(8, "pt")) +
+    scale_y_continuous(expand = c(0, 0)) +
     scale_fill_viridis_d(guide = guide_legend(title = NULL,
                                               reverse = TRUE)) +
     xlab(NULL) + ylab(NULL) +
@@ -87,10 +93,14 @@ gp <- ggplot(mapping = aes(x = indiv, y = value, fill = adaptor)) +
              aes(y = value / 1e6),
              fill = extracols[[2]])
 
+
+# 3mm per line plus 30 mm
+ho_mm <- (length(indiv_order) * 3) + 30
+
 ggsave(snakemake@output[["plot"]],
        gp,
        width = 210,
-       height = 148,
+       height = ho_mm,
        units = "mm",
        device = cairo_pdf)
 
