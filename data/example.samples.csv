@@ -1,0 +1,10 @@
+sample,barcode,r1_path,r2_path,metadata
+indiv11_mhyp_lincoln,TCCGGAGA+AGGATAGG,data/reads/indiv11/indiv11_R1.fq.gz,data/reads/indiv11/indiv11_R2.fq.gz,mhyp_lincoln
+indiv12_mhyp_lincoln,TCCGGAGA+TCAGAGCC,data/reads/indiv12/indiv12_R1.fq.gz,data/reads/indiv12/indiv12_R2.fq.gz,mhyp_lincoln
+indiv14_mhyp_lincoln,TCCGGAGA+TAAGATTA,data/reads/indiv14/indiv14_R1.fq.gz,data/reads/indiv14/indiv14_R2.fq.gz,mhyp_lincoln
+indiv27_maethm_lincoln,GAGATTCC+AGGATAGG,data/reads/indiv27/indiv27_R1.fq.gz,data/reads/indiv27/indiv27_R2.fq.gz,maethm_lincoln
+indiv28_mhyp_lincoln,GAGATTCC+TCAGAGCC,data/reads/indiv28/indiv28_R1.fq.gz,data/reads/indiv28/indiv28_R2.fq.gz,mhyp_lincoln
+indiv29_mhyp_lincoln,GAGATTCC+CTTCGCCT,data/reads/indiv29/indiv29_R1.fq.gz,data/reads/indiv29/indiv29_R2.fq.gz,mhyp_lincoln
+indiv3_mhyp_lincoln,ATTACTCG+AGGATAGG,data/reads/indiv3/indiv3_R1.fq.gz,data/reads/indiv3/indiv3_R2.fq.gz,mhyp_lincoln
+indiv33_mhyp_ruakura,ATTCAGAA+AGGCTATA,data/reads/indiv33/indiv33_R1.fq.gz,data/reads/indiv33/indiv33_R2.fq.gz,mhyp_ruakura
+indiv34_mhyp_lincoln,ATTCAGAA+GCCTCTAT,data/reads/indiv34/indiv34_R1.fq.gz,data/reads/indiv34/indiv34_R2.fq.gz,mhyp_lincoln

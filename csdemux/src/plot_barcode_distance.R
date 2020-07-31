@@ -11,29 +11,33 @@ library(ggplot2)
 library(scales)
 
 BcLookup <- function(x){
-    expected_barcodes[expected_barcode == x, unique(sample)[[1]]]
+  expected_barcodes[expected_barcode == x, unique(sample)[[1]]]
 }
 
 GetMmDt <- function(i){
-    my_mm <- merge(barcode_hammings[dist == i],
-                   abundant_reads,
-                   by.x = "found_barcode",
-                   by.y = "barcode")
-    my_mm[, sample := BcLookup(expected_barcode),
-          by = expected_barcode]
-    mydup <- duplicated(my_mm, by = "found_barcode")
-    if(any(mydup)){
-        dupbc <- my_mm[mydup, unique(found_barcode)]
-        print(my_mm[found_barcode == dupbc[[1]]])
-        stop(
-            paste0("Duplicated barcodes at i==", i,
-                   "\nOnly the first duplicate is printed")
-        )
-    }
-    return(my_mm)}
+  my_mm <- merge(barcode_hammings[dist == i],
+                 abundant_reads,
+                 by.x = "found_barcode",
+                 by.y = "barcode")
+  if(nrow(my_mm) == 0) {
+    my_mm[, sample := character()]
+    return(my_mm)
+  }
+  my_mm[, sample := BcLookup(expected_barcode),
+        by = expected_barcode]
+  mydup <- duplicated(my_mm, by = "found_barcode")
+  if(any(mydup)){
+    dupbc <- my_mm[mydup, unique(found_barcode)]
+    print(my_mm[found_barcode == dupbc[[1]]])
+    stop(
+      paste0("Duplicated barcodes at i==", i,
+             "\nOnly the first duplicate is printed")
+    )
+  }
+  return(my_mm)}
 
-# barcode_hamming_file <- "output/010_demux/hamming_distances.Rds"
-# stats_file <- "output/010_demux/stats.txt"
+# barcode_hamming_file <- "test/stats/hamming_distances.Rds"
+# stats_file <- "test/demux_stats.txt"
 # barcodes_file <- "data/samples.csv"
 # read_min_freq <- 1e-4
 # max_mismatches <- 1
@@ -87,21 +91,21 @@ sample_order <- plotdt[dist == 0, unique(sample)]
 # unassigned reads
 unassigned <- demux_stats[, sum(Reads)] - plotdt[, sum(sample_reads)]
 plotdt2 <- rbind(plotdt,
-      data.table(sample = "Unassigned",
-                 dist = NA,
-                 sample_reads = unassigned,
-                 readfrac = NA))
+                 data.table(sample = "Unassigned",
+                            dist = NA,
+                            sample_reads = unassigned,
+                            readfrac = NA))
 
 plotdt2[, sample := factor(sample, levels = c(sample_order, "Unassigned"))]
 
 gp <- ggplot(plotdt2, aes(y = sample_reads/1e6, x = sample, fill = as.factor(dist))) +
-    theme_minimal(base_size = 6) + 
-    coord_flip() + 
-    xlab(NULL) + ylab("Reads (M)") +
-    scale_y_continuous(expand = c(0, 0)) +
-    scale_fill_viridis_d(na.value = 4,
-                         guide = guide_legend(title = "Barcode distance")) +
-    geom_col()
+  theme_minimal(base_size = 6) + 
+  coord_flip() + 
+  xlab(NULL) + ylab("Reads (M)") +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_viridis_d(na.value = 4,
+                       guide = guide_legend(title = "Barcode distance")) +
+  geom_col()
 
 # 3mm per line plus 30 mm
 ho_mm <- (length(sample_order) * 3) + 33

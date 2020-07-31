@@ -8,10 +8,10 @@ sink(log, type = "output", append = TRUE)
 library(data.table)
 library(bit64)
 
-# step_files <- list.files("output/030_filter/stats",
+# step_files <- list.files("test/stats",
 #                          pattern = "trim.txt",
 #                          full.names = TRUE)
-
+# 
 step_files <- snakemake@input[["step_files"]]
 
 

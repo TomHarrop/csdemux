@@ -2,6 +2,8 @@
 
 from pathlib import Path
 import pandas
+import logging
+import shutil
 
 
 #############
@@ -15,7 +17,7 @@ def get_indiv_reads(wildcards):
     # barcode_csv = 'output/010_demux/barcode_distance.csv'
     # my_indiv = 'indiv83_mhyp_lincoln'
     # my_dist = 1
-    read_path = 'output/000_tmp/reads/{bc}_r{r}.fastq'
+    read_path = Path(outdir, 'tmp/reads/{bc}_r{r}.fastq')
     my_dist = int(max_dist)
     my_indiv = wildcards.indiv
     barcode_csv = checkpoints.plot_barcode_distance.get(
@@ -35,12 +37,11 @@ def kept_indiv_reads(wildcards):
     # barcode_csv = 'output/010_demux/barcode_distance.csv'
     barcode_csv = checkpoints.plot_barcode_distance.get(
         **wildcards).output['report']
-    read_path = 'output/030_filter/{indiv}_r{r}.fastq.gz'
+    read_path = Path(outdir, 'reads/{indiv}_r{r}.fastq.gz')
     found_bc = pandas.read_csv(barcode_csv)
     kept_df = found_bc.loc[(found_bc.dist == 0) & (found_bc.Reads > 0)]
     kept_indivs = sorted(set(kept_df['sample']))
     return(expand(read_path, indiv=kept_indivs, r=['1', '2']))
-
 
 
 def filter_trim_stats(wildcards):
@@ -50,7 +51,7 @@ def filter_trim_stats(wildcards):
     # barcode_csv = 'output/010_demux/barcode_distance.csv'
     barcode_csv = checkpoints.plot_barcode_distance.get(
         **wildcards).output['report']
-    stat_path = 'output/030_filter/stats/{indiv}.{step}.txt'
+    stat_path = Path(outdir, 'stats/{indiv}.{step}.txt')
     found_bc = pandas.read_csv(barcode_csv)
     kept_df = found_bc.loc[(found_bc.dist == 0) & (found_bc.Reads > 0)]
     kept_indivs = sorted(set(kept_df['sample']))
@@ -64,7 +65,7 @@ def trim_stat_files(wildcards):
     # barcode_csv = 'output/010_demux/barcode_distance.csv'
     barcode_csv = checkpoints.plot_barcode_distance.get(
         **wildcards).output['report']
-    stat_path = 'output/030_filter/stats/{indiv}.trim.stats.txt'
+    stat_path = Path(outdir, 'stats/{indiv}.trim.stats.txt')
     found_bc = pandas.read_csv(barcode_csv)
     kept_df = found_bc.loc[(found_bc.dist == 0) & (found_bc.Reads > 0)]
     kept_indivs = sorted(set(kept_df['sample']))
@@ -77,8 +78,15 @@ def trim_stat_files(wildcards):
 
 max_dist = 0
 
+# from args
+outdir = config['outdir']
+mem_gb = config['mem_gb']
+max_threads = config['threads']
+barcode_file = config['samples_csv']
+muxed_r1 = config['r1_file']
+muxed_r2 = config['r2_file']
+
 # get all indivs
-barcode_file = 'data/combined_sampleinfo.csv'
 barcode_csv = pandas.read_csv(barcode_file)
 all_indivs = sorted(set(barcode_csv['sample']))
 
@@ -88,51 +96,57 @@ bioconductor = 'shub://TomHarrop/r-containers:bioconductor_3.11'
 
 
 #########
-# RULES # 
+# RULES #
 #########
 
 wildcard_constraints:
     indiv = '|'.join(all_indivs),
     step = 'filter|trim'
 
+onsuccess:
+    try:
+        shutil.rmtree(Path(outdir, 'tmp'))
+    except FileNotFoundError as e:
+        logging.info(e)
+
 rule target:
     input:
         kept_indiv_reads,
-        'output/010_demux/barcode_content.pdf',
-        'output/010_demux/barcode_distance.pdf',
-        'output/030_filter/stats/adaptor_content.pdf',
-        'output/030_filter/stats/filter.all.txt'
+        Path(outdir, 'barcode_content.pdf'),
+        Path(outdir, 'barcode_distance.pdf'),
+        Path(outdir, 'adaptor_content.pdf'),
+        Path(outdir, 'stats/filter.all.txt'),
 
 rule plot_adaptor_content:
     input:
-        summary_file = 'output/030_filter/stats/trim.all.txt',
+        summary_file = Path(outdir, 'stats/trim.all.txt'),
         trim_files = trim_stat_files
     output:
-        plot = 'output/030_filter/stats/adaptor_content.pdf'
+        plot = Path(outdir, 'adaptor_content.pdf')
     log:
-        'output/logs/plot_adaptor_content.log'
+        Path(outdir, 'logs/plot_adaptor_content.log')
     singularity:
         bioconductor
     script:
-        'src/plot_adaptor_content.R'
+        shutil.which('plot_adaptor_content.R')
 
 rule combine_step_logs:
     input:
         step_files = filter_trim_stats
     output:
-        step_data = 'output/030_filter/stats/{step}.all.txt'
+        step_data = Path(outdir, 'stats/{step}.all.txt')
     log:
-        'output/logs/combine_step_logs.{step}.log'
+        Path(outdir, 'logs/combine_step_logs.{step}.log')
     singularity:
         bioconductor
     script:
-        'src/combine_step_logs.R'
+        shutil.which('combine_step_logs.R')
 
 rule grep_logs:
     input:
-        'output/030_filter/stats/{indiv}.{step}.log.txt'
+        Path(outdir, 'stats/{indiv}.{step}.log.txt')
     output:
-        temp('output/030_filter/stats/{indiv}.{step}.txt')
+        temp(Path(outdir, 'stats/{indiv}.{step}.txt'))
     shell:
         'grep \"^Input:\" {input} '
         '| tr -s \' \' '
@@ -146,14 +160,14 @@ rule grep_logs:
 
 rule trim:
     input:
-        'output/000_tmp/filter/{indiv}_filter.fastq'
+        fq = Path(outdir, 'tmp/{indiv}_filter.fastq'),
     output:
-        r1 = 'output/030_filter/{indiv}_r1.fastq.gz',
-        r2 = 'output/030_filter/{indiv}_r2.fastq.gz',
-        stats = 'output/030_filter/stats/{indiv}.trim.stats.txt',
-        log = 'output/030_filter/stats/{indiv}.trim.log.txt'
+        r1 = Path(outdir, 'reads/{indiv}_r1.fastq.gz'),
+        r2 = Path(outdir, 'reads/{indiv}_r2.fastq.gz'),
+        stats = Path(outdir, 'stats/{indiv}.trim.stats.txt'),
+        log = Path(outdir, 'stats/{indiv}.trim.log.txt')
     log:
-        'output/logs/{indiv}.trim.log'
+        Path(outdir, 'logs/{indiv}.trim.log')
     params:
         trim = '/adapters.fa'
     threads:
@@ -163,7 +177,7 @@ rule trim:
     shell:
         'bbduk.sh '
         'threads={threads} '
-        'in={input} '
+        'in={input.fq} '
         'int=t '
         'out={output.r1} '
         'out2={output.r2} '
@@ -176,16 +190,16 @@ rule trim:
 
 rule filter:
     input:
-        r1 = 'output/020_reads/{indiv}_r1.fastq',
-        r2 = 'output/020_reads/{indiv}_r2.fastq'
+        r1 = Path(outdir, 'tmp/indiv_reads/{indiv}_r1.fastq'),
+        r2 = Path(outdir, 'tmp/indiv_reads/{indiv}_r2.fastq')
     output:
-        pipe = pipe('output/000_tmp/filter/{indiv}_filter.fastq'),
-        stats = 'output/030_filter/stats/{indiv}.filter.stats.txt',
-        log = 'output/030_filter/stats/{indiv}.filter.log.txt'
+        pipe = pipe(Path(outdir, 'tmp/{indiv}_filter.fastq')),
+        stats = Path(outdir, 'stats/{indiv}.filter.stats.txt'),
+        log = Path(outdir, 'stats/{indiv}.filter.log.txt')
     params:
         filter = '/phix174_ill.ref.fa.gz'
     log:
-        'output/logs/{indiv}.filter.log'
+        Path(outdir, 'logs/{indiv}.filter.log')
     threads:
         max(4, workflow.cores // len(all_indivs))
     singularity:
@@ -206,10 +220,10 @@ rule filter:
 
 rule mv_reads:
     input:
-        unpack(get_indiv_reads)
+        unpack(get_indiv_reads),
     output:
-        r1 = temp('output/020_reads/{indiv}_r1.fastq'),
-        r2 = temp('output/020_reads/{indiv}_r2.fastq')
+        r1 = temp(Path(outdir, 'tmp/indiv_reads/{indiv}_r1.fastq')),
+        r2 = temp(Path(outdir, 'tmp/indiv_reads/{indiv}_r2.fastq'))
     shell:
         'cat {input.r1} > {output.r1} & '
         'cat {input.r2} > {output.r2} & '
@@ -218,62 +232,65 @@ rule mv_reads:
 
 checkpoint plot_barcode_distance:
     input:
-        stats = 'output/010_demux/stats.txt',
+        stats = Path(outdir, 'demux_stats.txt'),
         barcodes = barcode_file,
-        foundbc = 'output/010_demux/hamming_distances.Rds'
+        foundbc = Path(outdir, 'stats/hamming_distances.Rds')
     output:
-        plot = 'output/010_demux/barcode_distance.pdf',
-        report = 'output/010_demux/barcode_distance.csv'
+        plot = Path(outdir, 'barcode_distance.pdf'),
+        report = Path(outdir, 'stats/barcode_distance.csv')
     params:
         read_min_freq = 1e-4,
         max_mismatches = 2
     log:
-        'output/logs/plot_barcode_distance.log'
+        Path(outdir, 'logs/plot_barcode_distance.log')
     singularity:
         bioconductor
     script:
-        'src/plot_barcode_distance.R'
+        shutil.which('plot_barcode_distance.R')
 
 rule calculate_hamming_distance:
     input:
-        stats = 'output/010_demux/stats.txt',
+        stats = Path(outdir, 'demux_stats.txt'),
         barcodes = barcode_file
     output:
-        foundbc = 'output/010_demux/hamming_distances.Rds'
+        foundbc = Path(outdir, 'stats/hamming_distances.Rds')
     log:
-        'output/logs/calculate_hamming_distance.log'
+        Path(outdir, 'logs/calculate_hamming_distance.log')
     threads:
         workflow.cores
     singularity:
         bioconductor
     script:
-        'src/calculate_hamming_distance.R'
+        shutil.which('calculate_hamming_distance.R')
 
 rule plot_barcode_content:
     input:
-        stats = 'output/010_demux/stats.txt',
+        stats = Path(outdir, 'demux_stats.txt'),
     output:
-        plot = 'output/010_demux/barcode_content.pdf',
+        plot = Path(outdir, 'barcode_content.pdf'),
     log:
-        'output/logs/plot_barcode_content.log'
+        Path(outdir, 'logs/plot_barcode_content.log')
     singularity:
         bioconductor
     script:
-        'src/plot_barcode_content.R'
+        shutil.which('plot_barcode_content.R')
 
 checkpoint demultiplex:
     input:
-        r1 = 'data/muxed/Undetermined_S0_L002_R1_001.fastq.gz',
-        r2 = 'data/muxed/Undetermined_S0_L002_R2_001.fastq.gz'
+        # r1 = 'data/muxed/Undetermined_S0_L002_R1_001.fastq.gz',
+        # r2 = 'data/muxed/Undetermined_S0_L002_R2_001.fastq.gz'
+        r1 = muxed_r1,
+        r2 = muxed_r2
     output:
-        directory('output/000_tmp/reads'),
-        stats = 'output/010_demux/stats.txt'
+        directory(Path(outdir, 'tmp/reads')),
+        stats = Path(outdir, 'demux_stats.txt')
     log:
-        'output/logs/demultiplex.log'
+        Path(outdir, 'logs/demultiplex.log')
     params:
-        out = 'output/000_tmp/reads/%_r1.fastq',
-        out2 = 'output/000_tmp/reads/%_r2.fastq',
-        streams = min(workflow.cores, 40) // 2
+        out = Path(outdir, 'tmp/reads/%_r1.fastq').as_posix(),
+        out2 = Path(outdir, 'tmp/reads/%_r2.fastq').as_posix(),
+        streams = min(workflow.cores, 40) // 2,
+        mem_gb = mem_gb
     threads:
         min(workflow.cores, 40)
     singularity:
@@ -289,5 +306,5 @@ checkpoint demultiplex:
         'delimiter=: '
         'column=10 '
         'prefixmode=f '
-        '-Xmx100g '
+        '-Xmx{mem_gb}g '
         '2> {log}'
