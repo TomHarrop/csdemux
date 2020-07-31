@@ -15,7 +15,7 @@ def get_indiv_reads(wildcards):
     # barcode_csv = 'output/010_demux/barcode_distance.csv'
     # my_indiv = 'indiv83_mhyp_lincoln'
     # my_dist = 1
-    read_path = 'output/000_tmp/reads/{bc}_r{r}.fastq.gz'
+    read_path = 'output/000_tmp/reads/{bc}_r{r}.fastq'
     my_dist = int(max_dist)
     my_indiv = wildcards.indiv
     barcode_csv = checkpoints.plot_barcode_distance.get(
@@ -81,8 +81,6 @@ max_dist = 0
 barcode_file = 'data/combined_sampleinfo.csv'
 barcode_csv = pandas.read_csv(barcode_file)
 all_indivs = sorted(set(barcode_csv['sample']))
-'|'.join(all_indivs)
-
 
 # containers
 bbmap = 'shub://TomHarrop/seq-utils:bbmap_38.76'
@@ -178,8 +176,8 @@ rule trim:
 
 rule filter:
     input:
-        r1 = 'output/020_reads/{indiv}_r1.fastq.gz',
-        r2 = 'output/020_reads/{indiv}_r2.fastq.gz'
+        r1 = 'output/020_reads/{indiv}_r1.fastq',
+        r2 = 'output/020_reads/{indiv}_r2.fastq'
     output:
         pipe = pipe('output/000_tmp/filter/{indiv}_filter.fastq'),
         stats = 'output/030_filter/stats/{indiv}.filter.stats.txt',
@@ -210,8 +208,8 @@ rule mv_reads:
     input:
         unpack(get_indiv_reads)
     output:
-        r1 = 'output/020_reads/{indiv}_r1.fastq.gz',
-        r2 = 'output/020_reads/{indiv}_r2.fastq.gz'
+        r1 = temp('output/020_reads/{indiv}_r1.fastq'),
+        r2 = temp('output/020_reads/{indiv}_r2.fastq')
     shell:
         'cat {input.r1} > {output.r1} & '
         'cat {input.r2} > {output.r2} & '
@@ -273,8 +271,8 @@ checkpoint demultiplex:
     log:
         'output/logs/demultiplex.log'
     params:
-        out = 'output/000_tmp/reads/%_r1.fastq.gz',
-        out2 = 'output/000_tmp/reads/%_r2.fastq.gz',
+        out = 'output/000_tmp/reads/%_r1.fastq',
+        out2 = 'output/000_tmp/reads/%_r2.fastq',
         streams = min(workflow.cores, 40) // 2
     threads:
         min(workflow.cores, 40)
@@ -291,6 +289,5 @@ checkpoint demultiplex:
         'delimiter=: '
         'column=10 '
         'prefixmode=f '
-        'zl=9 '
         '-Xmx100g '
         '2> {log}'
