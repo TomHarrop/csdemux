@@ -121,8 +121,6 @@ rule plot_adaptor_content:
         plot = Path(outdir, 'adaptor_content.pdf')
     log:
         Path(outdir, 'logs/plot_adaptor_content.log')
-    singularity:
-        bioconductor
     script:
         shutil.which('plot_adaptor_content.R')
 
@@ -133,8 +131,6 @@ rule combine_step_logs:
         step_data = Path(outdir, 'stats/{step}.all.txt')
     log:
         Path(outdir, 'logs/combine_step_logs.{step}.log')
-    singularity:
-        bioconductor
     script:
         shutil.which('combine_step_logs.R')
 
@@ -168,8 +164,6 @@ rule trim:
         trim = '/adapters.fa'
     threads:
         max(4, workflow.cores // len(all_indivs))
-    singularity:
-        bbmap
     shell:
         'bbduk.sh '
         'threads={threads} '
@@ -198,8 +192,6 @@ rule filter:
         Path(outdir, 'logs/{indiv}.filter.log')
     threads:
         max(4, workflow.cores // len(all_indivs))
-    singularity:
-        bbmap
     shell:
         'bbduk.sh '
         'threads={threads} '
@@ -239,8 +231,6 @@ checkpoint plot_barcode_distance:
         max_mismatches = 2
     log:
         Path(outdir, 'logs/plot_barcode_distance.log')
-    singularity:
-        bioconductor
     script:
         shutil.which('plot_barcode_distance.R')
 
@@ -254,8 +244,6 @@ rule calculate_hamming_distance:
         Path(outdir, 'logs/calculate_hamming_distance.log')
     threads:
         workflow.cores
-    singularity:
-        bioconductor
     script:
         shutil.which('calculate_hamming_distance.R')
 
@@ -266,8 +254,6 @@ rule plot_barcode_content:
         plot = Path(outdir, 'barcode_content.pdf'),
     log:
         Path(outdir, 'logs/plot_barcode_content.log')
-    singularity:
-        bioconductor
     script:
         shutil.which('plot_barcode_content.R')
 
@@ -289,8 +275,6 @@ checkpoint demultiplex:
         mem_gb = mem_gb
     threads:
         min(workflow.cores, 40)
-    singularity:
-        bbmap
     shell:
         'demuxbyname.sh '
         'in={input.r1} '
