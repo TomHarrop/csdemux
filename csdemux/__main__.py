@@ -31,7 +31,7 @@ def parse_arguments():
     default_mem_gb = int(psutil.virtual_memory().available * .8 // 1e9)
     parser.add_argument(
         '--mem_gb',
-        help=('Number of threads. Default: %i' % default_threads),
+        help=('Amount of RAM in GB. Default: %i' % default_mem_gb),
         metavar='int',
         type=int,
         dest='mem_gb',
@@ -97,7 +97,6 @@ def main():
         config=args,
         cores=args['threads'],
         lock=False,
-        printreason=True,
         printshellcmds=True,
         dryrun=True if args['dry_run'] else False,
         restart_times=args['restart_times'])

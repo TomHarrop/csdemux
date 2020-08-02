@@ -95,6 +95,7 @@ wildcard_constraints:
 
 onsuccess:
     try:
+        logging.info(f'Removing temporary files')
         shutil.rmtree(Path(outdir, 'tmp'))
     except FileNotFoundError as e:
         logging.info(e)
