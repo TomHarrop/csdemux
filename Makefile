@@ -14,6 +14,7 @@ graph.svg: csdemux/Snakefile
 	r1_file=data/test_r1.fastq.gz \
 	r2_file=data/test_r2.fastq.gz \
 	samples_csv=data/example.samples.csv \
+	| grep -v "^[[:space:]+]0" | grep -v "\->[[:space:]]0" \
 	| dot -Tsvg \
 	> graph.svg
 
