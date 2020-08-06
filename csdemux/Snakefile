@@ -14,7 +14,7 @@ def get_indiv_reads(wildcards):
     '''
     get a list of reads to concat
     '''
-    read_path = Path(outdir, 'tmp/reads/{bc}_r{r}.fastq')
+    read_path = Path(outdir, 'tmp/reads/{bc}_r{{r}}.fastq')
     my_dist = int(max_dist)
     my_indiv = wildcards.indiv
     barcode_csv = checkpoints.plot_barcode_distance.get(**wildcards).output['report']
@@ -91,10 +91,13 @@ wildcard_constraints:
 
 onsuccess:
     try:
-        logging.info(f'Removing temporary files')
-        shutil.rmtree(Path(outdir, 'tmp'))
+        tmp_path = Path(outdir, 'tmp')
+        logging.info(f'Removing temporary files from {tmp_path}')
+        shutil.rmtree(tmp_path)
     except FileNotFoundError as e:
         logging.info(e)
+        logging.info(f'Hopefully this means {tmp_path} '
+                     'was already removed when the pipeline finished :S')
 
 rule target:
     input:
