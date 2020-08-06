@@ -96,7 +96,7 @@ def main():
         snakefile=snakefile,
         config=args,
         cores=args['threads'],
-        lock=False,
+        # lock=False,
         printshellcmds=True,
         dryrun=True if args['dry_run'] else False,
         restart_times=args['restart_times'])

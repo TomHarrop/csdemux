@@ -17,14 +17,10 @@ def get_indiv_reads(wildcards):
     read_path = Path(outdir, 'tmp/reads/{bc}_r{r}.fastq')
     my_dist = int(max_dist)
     my_indiv = wildcards.indiv
-    barcode_csv = checkpoints.plot_barcode_distance.get(
-        **wildcards).output['report']
+    barcode_csv = checkpoints.plot_barcode_distance.get(**wildcards).output['report']
     found_bc = pandas.read_csv(barcode_csv)
-    my_bcs = sorted(set(
-        found_bc.loc[(found_bc['sample'] == my_indiv) & (found_bc.dist <= my_dist)]['found_barcode']))
-    return(
-        {'r1': expand(read_path, bc=my_bcs, r=['1']),
-         'r2': expand(read_path, bc=my_bcs, r=['2'])})
+    my_bcs = sorted(set(found_bc.loc[(found_bc['sample'] == my_indiv) & (found_bc.dist <= my_dist)]['found_barcode']))
+    return(expand(read_path, bc=my_bcs))
 
 
 def kept_indiv_reads(wildcards):
@@ -203,15 +199,11 @@ rule filter:
 
 rule mv_reads:
     input:
-        unpack(get_indiv_reads),
+        get_indiv_reads,
     output:
-        r1 = temp(Path(outdir, 'tmp/indiv_reads/{indiv}_r1.fastq')),
-        r2 = temp(Path(outdir, 'tmp/indiv_reads/{indiv}_r2.fastq'))
+        pipe(Path(outdir, 'tmp/indiv_reads/{indiv}_r{r}.fastq'))
     shell:
-        'cat {input.r1} > {output.r1} & '
-        'cat {input.r2} > {output.r2} & '
-        'wait'
-
+        'cat {input} >> {output}'
 
 checkpoint plot_barcode_distance:
     input:
