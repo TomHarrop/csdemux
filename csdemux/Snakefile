@@ -93,7 +93,9 @@ onsuccess:
     try:
         tmp_path = Path(outdir, 'tmp')
         logging.info(f'Removing temporary files from {tmp_path}')
+        logging.info('This can take a while...')
         shutil.rmtree(tmp_path)
+        logging.info('...done')
     except FileNotFoundError as e:
         logging.info(e)
         logging.info(f'Hopefully this means {tmp_path} '
