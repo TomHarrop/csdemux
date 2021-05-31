@@ -83,6 +83,10 @@ jobs:
             ghcr.io/${{ env.owner }}/${{ env.reponame }}:${{ env.image_tag }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
       - uses: eWaterCycle/setup-singularity@v6
         if: ${{ env.release_tag != env.latest_tag }}
         with:
@@ -102,8 +106,4 @@ jobs:
           tag_name: ${{ env.release_tag }}
         run: |
           hub release edit $(find . -type f -name "*.sif" -printf "-a %p ") -m "" "$tag_name" 
-      - name: Move cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
           
